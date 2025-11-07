@@ -6,8 +6,8 @@
     </div>
 
     <form @submit.prevent="handleSubmit" class="form-content">
-      <div v-for="field in schema.fields" :key="field.name" class="form-field">
-        <label :for="field.name" class="field-label">
+      <div v-for="field in schema.fields" :key="getFieldKey(field)" class="form-field">
+        <label :for="getFieldKey(field)" class="field-label">
           {{ field.label }}
           <span v-if="field.required" class="required">*</span>
         </label>
@@ -15,9 +15,9 @@
         <!-- Text, Email, Password, Number inputs -->
         <input
           v-if="['text', 'email', 'password', 'number'].includes(field.type)"
-          :id="field.name"
+          :id="getFieldKey(field)"
           :type="field.type"
-          :name="field.name"
+          :name="getFieldKey(field)"
           :placeholder="field.placeholder"
           :required="field.required"
           :disabled="field.disabled"
@@ -26,40 +26,40 @@
           :minlength="field.minLength"
           :maxlength="field.maxLength"
           :pattern="field.pattern"
-          v-model="formData[field.name]"
+          v-model="formData[getFieldKey(field)]"
           @input="validateField(field)"
           class="form-input"
-          :class="{ 'input-error': errors[field.name] }"
+          :class="{ 'input-error': errors[getFieldKey(field)] }"
         />
 
         <!-- Textarea -->
         <textarea
           v-else-if="field.type === 'textarea'"
-          :id="field.name"
-          :name="field.name"
+          :id="getFieldKey(field)"
+          :name="getFieldKey(field)"
           :placeholder="field.placeholder"
           :required="field.required"
           :disabled="field.disabled"
           :minlength="field.minLength"
           :maxlength="field.maxLength"
-          v-model="formData[field.name]"
+          v-model="formData[getFieldKey(field)]"
           @input="validateField(field)"
           class="form-textarea"
-          :class="{ 'input-error': errors[field.name] }"
+          :class="{ 'input-error': errors[getFieldKey(field)] }"
           rows="4"
         ></textarea>
 
         <!-- Select -->
         <select
           v-else-if="field.type === 'select'"
-          :id="field.name"
-          :name="field.name"
+          :id="getFieldKey(field)"
+          :name="getFieldKey(field)"
           :required="field.required"
           :disabled="field.disabled"
-          v-model="formData[field.name]"
+          v-model="formData[getFieldKey(field)]"
           @change="validateField(field)"
           class="form-select"
-          :class="{ 'input-error': errors[field.name] }"
+          :class="{ 'input-error': errors[getFieldKey(field)] }"
         >
           <option value="">Выберите вариант</option>
           <option v-for="option in field.options" :key="option" :value="option">
@@ -70,12 +70,12 @@
         <!-- Checkbox -->
         <div v-else-if="field.type === 'checkbox'" class="checkbox-wrapper">
           <input
-            :id="field.name"
+            :id="getFieldKey(field)"
             type="checkbox"
-            :name="field.name"
+            :name="getFieldKey(field)"
             :required="field.required"
             :disabled="field.disabled"
-            v-model="formData[field.name]"
+            v-model="formData[getFieldKey(field)]"
             @change="validateField(field)"
             class="form-checkbox"
           />
@@ -85,23 +85,23 @@
         <div v-else-if="field.type === 'radio'" class="radio-group">
           <div v-for="option in field.options" :key="option" class="radio-wrapper">
             <input
-              :id="`${field.name}_${option}`"
+              :id="`${getFieldKey(field)}_${option}`"
               type="radio"
-              :name="field.name"
+              :name="getFieldKey(field)"
               :value="option"
               :required="field.required"
               :disabled="field.disabled"
-              v-model="formData[field.name]"
+              v-model="formData[getFieldKey(field)]"
               @change="validateField(field)"
               class="form-radio"
             />
-            <label :for="`${field.name}_${option}`" class="radio-label">{{ option }}</label>
+            <label :for="`${getFieldKey(field)}_${option}`" class="radio-label">{{ option }}</label>
           </div>
         </div>
 
         <!-- Error message -->
-        <div v-if="errors[field.name]" class="error-message">
-          {{ errors[field.name] }}
+        <div v-if="errors[getFieldKey(field)]" class="error-message">
+          {{ errors[getFieldKey(field)] }}
         </div>
       </div>
 
@@ -139,6 +139,11 @@ const props = defineProps({
 const formData = reactive({})
 const errors = reactive({})
 
+// Get field key (supports both 'model' and 'name')
+const getFieldKey = (field) => {
+  return field.model || field.name
+}
+
 // Initialize form data with default values
 const initializeForm = () => {
   Object.keys(formData).forEach(key => delete formData[key])
@@ -146,10 +151,11 @@ const initializeForm = () => {
   
   if (props.schema.fields) {
     props.schema.fields.forEach(field => {
+      const key = getFieldKey(field)
       if (field.type === 'checkbox') {
-        formData[field.name] = field.defaultValue ?? false
+        formData[key] = field.defaultValue ?? false
       } else {
-        formData[field.name] = field.defaultValue ?? ''
+        formData[key] = field.defaultValue ?? ''
       }
     })
   }
@@ -157,41 +163,42 @@ const initializeForm = () => {
 
 // Validate individual field
 const validateField = (field) => {
-  const value = formData[field.name]
+  const key = getFieldKey(field)
+  const value = formData[key]
   
   // Required validation
   if (field.required && !value && value !== 0 && value !== false) {
-    errors[field.name] = 'Это поле обязательно для заполнения'
+    errors[key] = 'Это поле обязательно для заполнения'
     return false
   }
   
   // Skip other validations if field is empty and not required
   if (!value && !field.required) {
-    delete errors[field.name]
+    delete errors[key]
     return true
   }
   
   // MinLength validation
   if (field.minLength && value.length < field.minLength) {
-    errors[field.name] = `Минимальная длина: ${field.minLength} символов`
+    errors[key] = `Минимальная длина: ${field.minLength} символов`
     return false
   }
   
   // MaxLength validation
   if (field.maxLength && value.length > field.maxLength) {
-    errors[field.name] = `Максимальная длина: ${field.maxLength} символов`
+    errors[key] = `Максимальная длина: ${field.maxLength} символов`
     return false
   }
   
   // Min validation (numbers)
   if (field.type === 'number' && field.min !== undefined && Number(value) < field.min) {
-    errors[field.name] = `Минимальное значение: ${field.min}`
+    errors[key] = `Минимальное значение: ${field.min}`
     return false
   }
   
   // Max validation (numbers)
   if (field.type === 'number' && field.max !== undefined && Number(value) > field.max) {
-    errors[field.name] = `Максимальное значение: ${field.max}`
+    errors[key] = `Максимальное значение: ${field.max}`
     return false
   }
   
@@ -199,12 +206,12 @@ const validateField = (field) => {
   if (field.pattern && value) {
     const regex = new RegExp(field.pattern)
     if (!regex.test(value)) {
-      errors[field.name] = 'Значение не соответствует требуемому формату'
+      errors[key] = 'Значение не соответствует требуемому формату'
       return false
     }
   }
   
-  delete errors[field.name]
+  delete errors[key]
   return true
 }
 
@@ -213,13 +220,14 @@ const isFormValid = computed(() => {
   if (!props.schema.fields) return false
   
   return props.schema.fields.every(field => {
-    const value = formData[field.name]
+    const key = getFieldKey(field)
+    const value = formData[key]
     
     if (field.required && !value && value !== 0 && value !== false) {
       return false
     }
     
-    return !errors[field.name]
+    return !errors[key]
   })
 })
 

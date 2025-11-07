@@ -91,9 +91,48 @@ const parsedSchema = reactive({
 // Example schemas
 const examples = [
   {
+    name: 'artlebedev',
+    schema: {
+      fields: [
+        { 
+          type: 'text', 
+          label: 'Имя', 
+          model: 'name', 
+          required: true 
+        },
+        { 
+          type: 'email', 
+          label: 'Email', 
+          model: 'email', 
+          required: true 
+        },
+        { 
+          type: 'password', 
+          label: 'Пароль', 
+          model: 'password', 
+          required: true, 
+          minLength: 6 
+        },
+        { 
+          type: 'select', 
+          label: 'Роль', 
+          model: 'role', 
+          options: ['Админ', 'Пользователь'], 
+          required: true 
+        },
+        { 
+          type: 'checkbox', 
+          label: 'Согласен с условиями', 
+          model: 'terms', 
+          required: true 
+        }
+      ]
+    }
+  },
+  {
     name: 'Регистрация',
     schema: {
-      title: 'Форма регистрации',
+      title: 'Форма регистрации и анкета',
       description: 'Заполните данные для создания аккаунта',
       fields: [
         {
@@ -120,6 +159,29 @@ const examples = [
           placeholder: 'Минимум 8 символов',
           required: true,
           minLength: 8
+        },
+        {
+          type: 'number',
+          name: 'age',
+          label: 'Возраст',
+          placeholder: '18',
+          required: true,
+          min: 18,
+          max: 100
+        },
+        {
+          type: 'select',
+          name: 'country',
+          label: 'Страна',
+          required: true,
+          options: ['Россия', 'Беларусь', 'Казахстан', 'Украина', 'Другая']
+        },
+        {
+          type: 'radio',
+          name: 'gender',
+          label: 'Пол',
+          required: true,
+          options: ['Мужской', 'Женский']
         },
         {
           type: 'checkbox',
@@ -172,51 +234,6 @@ const examples = [
           label: 'Оцените наш сервис',
           required: true,
           options: ['Отлично', 'Хорошо', 'Удовлетворительно', 'Плохо']
-        }
-      ]
-    }
-  },
-  {
-    name: 'Анкета',
-    schema: {
-      title: 'Личная анкета',
-      description: 'Пожалуйста, заполните все поля',
-      fields: [
-        {
-          type: 'text',
-          name: 'fullName',
-          label: 'ФИО',
-          placeholder: 'Иванов Иван Иванович',
-          required: true
-        },
-        {
-          type: 'number',
-          name: 'age',
-          label: 'Возраст',
-          placeholder: '18',
-          required: true,
-          min: 18,
-          max: 100
-        },
-        {
-          type: 'select',
-          name: 'country',
-          label: 'Страна',
-          required: true,
-          options: ['Россия', 'Беларусь', 'Казахстан', 'Украина', 'Другая']
-        },
-        {
-          type: 'radio',
-          name: 'gender',
-          label: 'Пол',
-          required: true,
-          options: ['Мужской', 'Женский']
-        },
-        {
-          type: 'checkbox',
-          name: 'subscribe',
-          label: 'Подписаться на рассылку',
-          defaultValue: false
         }
       ]
     }
