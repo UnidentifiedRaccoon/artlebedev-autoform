@@ -1,0 +1,574 @@
+<template>
+  <div class="form-builder">
+    <div class="builder-header">
+      <h1>🎨 Конструктор форм Vue 3</h1>
+      <p>Введите JSON-схему слева и увидите сгенерированную форму справа</p>
+    </div>
+
+    <div class="builder-content">
+      <!-- Left Panel: Schema Editor -->
+      <div class="editor-panel">
+        <div class="panel-header">
+          <h2>📝 Редактор схемы</h2>
+          <div class="panel-actions">
+            <button @click="formatJSON" class="btn-action" title="Форматировать">
+              ✨ Форматировать
+            </button>
+            <button @click="clearSchema" class="btn-action btn-danger" title="Очистить">
+              🗑️ Очистить
+            </button>
+          </div>
+        </div>
+
+        <div class="editor-wrapper">
+          <textarea
+            v-model="schemaText"
+            @input="handleSchemaChange"
+            class="schema-editor"
+            :class="{ 'has-error': jsonError }"
+            placeholder="Введите JSON-схему здесь..."
+            spellcheck="false"
+          ></textarea>
+          
+          <div v-if="jsonError" class="json-error">
+            <strong>❌ Ошибка парсинга JSON:</strong>
+            <pre>{{ jsonError }}</pre>
+          </div>
+          <div v-else class="json-success">
+            ✅ JSON валиден
+          </div>
+        </div>
+
+        <!-- Example Schemas -->
+        <div class="examples-section">
+          <h3>📚 Примеры схем:</h3>
+          <div class="examples-grid">
+            <button
+              v-for="(example, index) in examples"
+              :key="index"
+              @click="loadExample(index)"
+              class="btn-example"
+            >
+              {{ example.name }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Form Preview -->
+      <div class="preview-panel">
+        <div class="panel-header">
+          <h2>👁️ Предварительный просмотр</h2>
+        </div>
+
+        <div class="preview-wrapper">
+          <div v-if="!jsonError && parsedSchema.fields && parsedSchema.fields.length > 0">
+            <FormGenerator :schema="parsedSchema" />
+          </div>
+          <div v-else class="empty-state">
+            <div class="empty-icon">📋</div>
+            <h3>Форма не создана</h3>
+            <p>Введите валидную JSON-схему слева или выберите пример</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive } from 'vue'
+import FormGenerator from './FormGenerator.vue'
+
+const schemaText = ref('')
+const jsonError = ref('')
+const parsedSchema = reactive({
+  title: '',
+  description: '',
+  fields: []
+})
+
+// Example schemas
+const examples = [
+  {
+    name: 'Регистрация',
+    schema: {
+      title: 'Форма регистрации',
+      description: 'Заполните данные для создания аккаунта',
+      fields: [
+        {
+          type: 'text',
+          name: 'username',
+          label: 'Имя пользователя',
+          placeholder: 'Введите имя пользователя',
+          required: true,
+          minLength: 3,
+          maxLength: 20,
+          pattern: '^[a-zA-Z0-9_]+$'
+        },
+        {
+          type: 'email',
+          name: 'email',
+          label: 'Email',
+          placeholder: 'example@mail.com',
+          required: true
+        },
+        {
+          type: 'password',
+          name: 'password',
+          label: 'Пароль',
+          placeholder: 'Минимум 8 символов',
+          required: true,
+          minLength: 8
+        },
+        {
+          type: 'checkbox',
+          name: 'terms',
+          label: 'Я согласен с условиями использования',
+          required: true
+        }
+      ]
+    }
+  },
+  {
+    name: 'Обратная связь',
+    schema: {
+      title: 'Форма обратной связи',
+      description: 'Мы будем рады услышать ваше мнение',
+      fields: [
+        {
+          type: 'text',
+          name: 'name',
+          label: 'Ваше имя',
+          placeholder: 'Иван Иванов',
+          required: true
+        },
+        {
+          type: 'email',
+          name: 'email',
+          label: 'Email для связи',
+          placeholder: 'ivan@example.com',
+          required: true
+        },
+        {
+          type: 'select',
+          name: 'topic',
+          label: 'Тема обращения',
+          required: true,
+          options: ['Вопрос', 'Предложение', 'Жалоба', 'Другое']
+        },
+        {
+          type: 'textarea',
+          name: 'message',
+          label: 'Сообщение',
+          placeholder: 'Введите ваше сообщение...',
+          required: true,
+          minLength: 10,
+          maxLength: 500
+        },
+        {
+          type: 'radio',
+          name: 'rating',
+          label: 'Оцените наш сервис',
+          required: true,
+          options: ['Отлично', 'Хорошо', 'Удовлетворительно', 'Плохо']
+        }
+      ]
+    }
+  },
+  {
+    name: 'Анкета',
+    schema: {
+      title: 'Личная анкета',
+      description: 'Пожалуйста, заполните все поля',
+      fields: [
+        {
+          type: 'text',
+          name: 'fullName',
+          label: 'ФИО',
+          placeholder: 'Иванов Иван Иванович',
+          required: true
+        },
+        {
+          type: 'number',
+          name: 'age',
+          label: 'Возраст',
+          placeholder: '18',
+          required: true,
+          min: 18,
+          max: 100
+        },
+        {
+          type: 'select',
+          name: 'country',
+          label: 'Страна',
+          required: true,
+          options: ['Россия', 'Беларусь', 'Казахстан', 'Украина', 'Другая']
+        },
+        {
+          type: 'radio',
+          name: 'gender',
+          label: 'Пол',
+          required: true,
+          options: ['Мужской', 'Женский']
+        },
+        {
+          type: 'checkbox',
+          name: 'subscribe',
+          label: 'Подписаться на рассылку',
+          defaultValue: false
+        }
+      ]
+    }
+  },
+  {
+    name: 'Заказ',
+    schema: {
+      title: 'Оформление заказа',
+      description: 'Заполните данные для доставки',
+      fields: [
+        {
+          type: 'text',
+          name: 'recipientName',
+          label: 'Имя получателя',
+          placeholder: 'Иван Иванов',
+          required: true
+        },
+        {
+          type: 'text',
+          name: 'phone',
+          label: 'Телефон',
+          placeholder: '+7 (999) 123-45-67',
+          required: true,
+          pattern: '^\\+?[0-9\\s\\-\\(\\)]+$'
+        },
+        {
+          type: 'text',
+          name: 'address',
+          label: 'Адрес доставки',
+          placeholder: 'ул. Пушкина, д. 1, кв. 1',
+          required: true
+        },
+        {
+          type: 'select',
+          name: 'deliveryMethod',
+          label: 'Способ доставки',
+          required: true,
+          options: ['Курьером', 'Самовывоз', 'Почта России']
+        },
+        {
+          type: 'textarea',
+          name: 'comment',
+          label: 'Комментарий к заказу',
+          placeholder: 'Дополнительная информация...',
+          required: false
+        }
+      ]
+    }
+  }
+]
+
+const handleSchemaChange = () => {
+  try {
+    if (!schemaText.value.trim()) {
+      jsonError.value = ''
+      parsedSchema.title = ''
+      parsedSchema.description = ''
+      parsedSchema.fields = []
+      return
+    }
+
+    const parsed = JSON.parse(schemaText.value)
+    
+    // Validate schema structure
+    if (!parsed.fields || !Array.isArray(parsed.fields)) {
+      throw new Error('Схема должна содержать массив "fields"')
+    }
+
+    // Update parsed schema
+    Object.assign(parsedSchema, {
+      title: parsed.title || '',
+      description: parsed.description || '',
+      fields: parsed.fields || []
+    })
+
+    jsonError.value = ''
+  } catch (error) {
+    jsonError.value = error.message
+  }
+}
+
+const formatJSON = () => {
+  try {
+    if (!schemaText.value.trim()) return
+    
+    const parsed = JSON.parse(schemaText.value)
+    schemaText.value = JSON.stringify(parsed, null, 2)
+    handleSchemaChange()
+  } catch (error) {
+    // Keep current text if formatting fails
+  }
+}
+
+const clearSchema = () => {
+  schemaText.value = ''
+  jsonError.value = ''
+  parsedSchema.title = ''
+  parsedSchema.description = ''
+  parsedSchema.fields = []
+}
+
+const loadExample = (index) => {
+  const example = examples[index]
+  schemaText.value = JSON.stringify(example.schema, null, 2)
+  handleSchemaChange()
+}
+
+// Load first example on mount
+loadExample(0)
+</script>
+
+<style scoped>
+.form-builder {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.builder-header {
+  text-align: center;
+  color: white;
+  margin-bottom: 30px;
+}
+
+.builder-header h1 {
+  margin: 0 0 10px 0;
+  font-size: 36px;
+  font-weight: 700;
+}
+
+.builder-header p {
+  margin: 0;
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+.builder-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-width: 1800px;
+  margin: 0 auto;
+}
+
+.editor-panel,
+.preview-panel {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 20px;
+  background: #f8f9fa;
+  border-bottom: 2px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #2c3e50;
+}
+
+.panel-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-action {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #42b883;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-action:hover {
+  background: #35a372;
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  background: #e74c3c;
+}
+
+.btn-danger:hover {
+  background: #c0392b;
+}
+
+.editor-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.schema-editor {
+  flex: 1;
+  min-height: 300px;
+  padding: 16px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.schema-editor:focus {
+  outline: none;
+  border-color: #42b883;
+}
+
+.schema-editor.has-error {
+  border-color: #e74c3c;
+}
+
+.json-error {
+  margin-top: 12px;
+  padding: 12px;
+  background: #fee;
+  border: 1px solid #e74c3c;
+  border-radius: 6px;
+  color: #c0392b;
+  font-size: 13px;
+}
+
+.json-error strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.json-error pre {
+  margin: 0;
+  font-family: 'Courier New', monospace;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.json-success {
+  margin-top: 12px;
+  padding: 12px;
+  background: #d4edda;
+  border: 1px solid #42b883;
+  border-radius: 6px;
+  color: #155724;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.examples-section {
+  padding: 20px;
+  border-top: 2px solid #e9ecef;
+  background: #f8f9fa;
+}
+
+.examples-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  color: #2c3e50;
+}
+
+.examples-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.btn-example {
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  color: #2c3e50;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-example:hover {
+  border-color: #42b883;
+  background: #f0fdf7;
+  transform: translateY(-2px);
+}
+
+.preview-wrapper {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 60px 20px;
+  color: #6c757d;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  margin: 0 0 10px 0;
+  font-size: 24px;
+  color: #495057;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 16px;
+}
+
+@media (max-width: 1200px) {
+  .builder-content {
+    grid-template-columns: 1fr;
+  }
+
+  .examples-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .builder-header h1 {
+    font-size: 28px;
+  }
+
+  .examples-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .panel-actions {
+    flex-direction: column;
+  }
+}
+</style>
+
