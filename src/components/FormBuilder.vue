@@ -360,8 +360,6 @@ loadExample(0)
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-  max-width: 1800px;
-  margin: 0 auto;
   flex: 1;
   min-height: 0;
 }

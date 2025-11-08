@@ -1,29 +1,31 @@
 <template>
-  <div class="tooltip-wrapper">
+  <div class="tooltip-wrapper" ref="wrapperRef">
     <div 
-      @mouseenter="showTooltip = true" 
+      @mouseenter="handleMouseEnter" 
       @mouseleave="showTooltip = false"
       class="tooltip-trigger"
     >
       <slot></slot>
     </div>
-    <transition name="tooltip-fade">
-      <div 
-        v-if="showTooltip" 
-        class="tooltip-content"
-        :class="[`tooltip-${position}`]"
-      >
-        {{ text }}
-        <div class="tooltip-arrow"></div>
-      </div>
-    </transition>
+    <teleport to="body">
+      <transition name="tooltip-fade">
+        <div 
+          v-if="showTooltip" 
+          class="tooltip-content"
+          :style="tooltipStyle"
+        >
+          {{ text }}
+          <div class="tooltip-arrow" :class="`arrow-${position}`"></div>
+        </div>
+      </transition>
+    </teleport>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
-defineProps({
+const props = defineProps({
   text: {
     type: String,
     required: true
@@ -36,11 +38,68 @@ defineProps({
 })
 
 const showTooltip = ref(false)
+const wrapperRef = ref(null)
+const tooltipPosition = ref({ top: 0, left: 0 })
+
+const handleMouseEnter = () => {
+  if (wrapperRef.value) {
+    const rect = wrapperRef.value.getBoundingClientRect()
+    const offset = 8
+    
+    switch (props.position) {
+      case 'top':
+        tooltipPosition.value = {
+          top: rect.top - offset,
+          left: rect.left + rect.width / 2
+        }
+        break
+      case 'bottom':
+        tooltipPosition.value = {
+          top: rect.bottom + offset,
+          left: rect.left + rect.width / 2
+        }
+        break
+      case 'left':
+        tooltipPosition.value = {
+          top: rect.top + rect.height / 2,
+          left: rect.left - offset
+        }
+        break
+      case 'right':
+        tooltipPosition.value = {
+          top: rect.top + rect.height / 2,
+          left: rect.right + offset
+        }
+        break
+    }
+  }
+  showTooltip.value = true
+}
+
+const tooltipStyle = computed(() => {
+  const style = {
+    position: 'fixed',
+    top: `${tooltipPosition.value.top}px`,
+    left: `${tooltipPosition.value.left}px`,
+    zIndex: 9999
+  }
+  
+  if (props.position === 'top') {
+    style.transform = 'translate(-50%, -100%)'
+  } else if (props.position === 'bottom') {
+    style.transform = 'translateX(-50%)'
+  } else if (props.position === 'left') {
+    style.transform = 'translate(-100%, -50%)'
+  } else if (props.position === 'right') {
+    style.transform = 'translateY(-50%)'
+  }
+  
+  return style
+})
 </script>
 
 <style scoped>
 .tooltip-wrapper {
-  position: relative;
   display: inline-block;
 }
 
@@ -49,8 +108,6 @@ const showTooltip = ref(false)
 }
 
 .tooltip-content {
-  position: absolute;
-  z-index: 1000;
   padding: 8px 12px;
   background: #2c3e50;
   color: white;
@@ -69,14 +126,7 @@ const showTooltip = ref(false)
   border-style: solid;
 }
 
-/* Position: top */
-.tooltip-top {
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.tooltip-top .tooltip-arrow {
+.arrow-top {
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
@@ -84,14 +134,7 @@ const showTooltip = ref(false)
   border-color: #2c3e50 transparent transparent transparent;
 }
 
-/* Position: bottom */
-.tooltip-bottom {
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.tooltip-bottom .tooltip-arrow {
+.arrow-bottom {
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
@@ -99,14 +142,7 @@ const showTooltip = ref(false)
   border-color: transparent transparent #2c3e50 transparent;
 }
 
-/* Position: left */
-.tooltip-left {
-  right: calc(100% + 8px);
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.tooltip-left .tooltip-arrow {
+.arrow-left {
   left: 100%;
   top: 50%;
   transform: translateY(-50%);
@@ -114,14 +150,7 @@ const showTooltip = ref(false)
   border-color: transparent transparent transparent #2c3e50;
 }
 
-/* Position: right */
-.tooltip-right {
-  left: calc(100% + 8px);
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.tooltip-right .tooltip-arrow {
+.arrow-right {
   right: 100%;
   top: 50%;
   transform: translateY(-50%);
@@ -129,7 +158,6 @@ const showTooltip = ref(false)
   border-color: transparent #2c3e50 transparent transparent;
 }
 
-/* Fade animation */
 .tooltip-fade-enter-active,
 .tooltip-fade-leave-active {
   transition: opacity 0.2s ease;

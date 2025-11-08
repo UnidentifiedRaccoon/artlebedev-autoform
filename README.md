@@ -5,6 +5,10 @@
 ![Vue 3](https://img.shields.io/badge/Vue.js-3.5-42b883?style=flat-square&logo=vue.js)
 ![Vite](https://img.shields.io/badge/Vite-5.4-646cff?style=flat-square&logo=vite)
 
+## 🌐 Живое демо
+
+**[👉 Попробовать конструктор форм](https://unidentifiedraccoon.github.io/artlebedev-autoform/)**
+
 ## ✨ Возможности
 
 ### 📝 Редактор схемы
