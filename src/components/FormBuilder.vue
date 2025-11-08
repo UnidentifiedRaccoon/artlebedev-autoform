@@ -8,51 +8,16 @@
     <div class="builder-content">
       <!-- Left Panel: Schema Editor -->
       <div class="editor-panel">
-        <div class="panel-header">
-          <h2>📝 Редактор схемы</h2>
-          <div class="panel-actions">
-            <button @click="formatJSON" class="btn-action" title="Форматировать">
-              ✨ Форматировать
-            </button>
-            <button @click="clearSchema" class="btn-action btn-danger" title="Очистить">
-              🗑️ Очистить
-            </button>
-          </div>
-        </div>
-
-        <div class="editor-wrapper">
-          <textarea
-            v-model="schemaText"
-            @input="handleSchemaChange"
-            class="schema-editor"
-            :class="{ 'has-error': jsonError }"
-            placeholder="Введите JSON-схему здесь..."
-            spellcheck="false"
-          ></textarea>
-          
-          <div v-if="jsonError" class="json-error">
-            <strong>❌ Ошибка парсинга JSON:</strong>
-            <pre>{{ jsonError }}</pre>
-          </div>
-          <div v-else class="json-success">
-            ✅ JSON валиден
-          </div>
-        </div>
-
-        <!-- Example Schemas -->
-        <div class="examples-section">
-          <h3>📚 Примеры схем:</h3>
-          <div class="examples-grid">
-            <button
-              v-for="(example, index) in examples"
-              :key="index"
-              @click="loadExample(index)"
-              class="btn-example"
-            >
-              {{ example.name }}
-            </button>
-          </div>
-        </div>
+        <SchemaEditor 
+          v-model="schemaText"
+          :error="jsonError"
+          @format="formatJSON"
+          @clear="clearSchema"
+        />
+        <ExamplesPanel 
+          :examples="examples"
+          @load-example="loadExample"
+        />
       </div>
 
       <!-- Right Panel: Form Preview -->
@@ -77,8 +42,13 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch } from 'vue'
+import { useSchemaParser } from '../composables/useSchemaParser'
 import FormGenerator from './FormGenerator.vue'
+import SchemaEditor from './builder/SchemaEditor.vue'
+import ExamplesPanel from './builder/ExamplesPanel.vue'
+
+const { parseSchema, formatSchema: formatSchemaText } = useSchemaParser()
 
 const schemaText = ref('')
 const jsonError = ref('')
@@ -285,48 +255,47 @@ const examples = [
   }
 ]
 
+/**
+ * Handle schema text changes
+ */
 const handleSchemaChange = () => {
-  try {
-    if (!schemaText.value.trim()) {
-      jsonError.value = ''
-      parsedSchema.title = ''
-      parsedSchema.description = ''
-      parsedSchema.fields = []
-      return
-    }
-
-    const parsed = JSON.parse(schemaText.value)
-    
-    // Validate schema structure
-    if (!parsed.fields || !Array.isArray(parsed.fields)) {
-      throw new Error('Схема должна содержать массив "fields"')
-    }
-
-    // Update parsed schema
+  const parsed = parseSchema(schemaText.value)
+  
+  if (parsed) {
     Object.assign(parsedSchema, {
       title: parsed.title || '',
       description: parsed.description || '',
       fields: parsed.fields || []
     })
-
     jsonError.value = ''
-  } catch (error) {
-    jsonError.value = error.message
+  } else if (!schemaText.value.trim()) {
+    // Clear schema if text is empty
+    parsedSchema.title = ''
+    parsedSchema.description = ''
+    parsedSchema.fields = []
+    jsonError.value = ''
+  } else {
+    // There was a parse error
+    jsonError.value = 'Ошибка парсинга JSON'
   }
 }
 
+/**
+ * Format JSON schema
+ */
 const formatJSON = () => {
-  try {
-    if (!schemaText.value.trim()) return
-    
-    const parsed = JSON.parse(schemaText.value)
-    schemaText.value = JSON.stringify(parsed, null, 2)
+  if (!schemaText.value.trim()) return
+  
+  const formatted = formatSchemaText(schemaText.value)
+  if (formatted !== schemaText.value) {
+    schemaText.value = formatted
     handleSchemaChange()
-  } catch (error) {
-    // Keep current text if formatting fails
   }
 }
 
+/**
+ * Clear schema
+ */
 const clearSchema = () => {
   schemaText.value = ''
   jsonError.value = ''
@@ -335,11 +304,19 @@ const clearSchema = () => {
   parsedSchema.fields = []
 }
 
+/**
+ * Load example schema
+ */
 const loadExample = (index) => {
   const example = examples[index]
   schemaText.value = JSON.stringify(example.schema, null, 2)
   handleSchemaChange()
 }
+
+// Watch for schema text changes
+watch(schemaText, () => {
+  handleSchemaChange()
+})
 
 // Load first example on mount
 loadExample(0)
@@ -403,134 +380,6 @@ loadExample(0)
   color: #2c3e50;
 }
 
-.panel-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.btn-action {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  background: #42b883;
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-action:hover {
-  background: #35a372;
-  transform: translateY(-1px);
-}
-
-.btn-danger {
-  background: #e74c3c;
-}
-
-.btn-danger:hover {
-  background: #c0392b;
-}
-
-.editor-wrapper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-}
-
-.schema-editor {
-  flex: 1;
-  min-height: 300px;
-  padding: 16px;
-  border: 2px solid #ddd;
-  border-radius: 8px;
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  resize: vertical;
-  transition: border-color 0.2s;
-}
-
-.schema-editor:focus {
-  outline: none;
-  border-color: #42b883;
-}
-
-.schema-editor.has-error {
-  border-color: #e74c3c;
-}
-
-.json-error {
-  margin-top: 12px;
-  padding: 12px;
-  background: #fee;
-  border: 1px solid #e74c3c;
-  border-radius: 6px;
-  color: #c0392b;
-  font-size: 13px;
-}
-
-.json-error strong {
-  display: block;
-  margin-bottom: 8px;
-}
-
-.json-error pre {
-  margin: 0;
-  font-family: 'Courier New', monospace;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-.json-success {
-  margin-top: 12px;
-  padding: 12px;
-  background: #d4edda;
-  border: 1px solid #42b883;
-  border-radius: 6px;
-  color: #155724;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.examples-section {
-  padding: 20px;
-  border-top: 2px solid #e9ecef;
-  background: #f8f9fa;
-}
-
-.examples-section h3 {
-  margin: 0 0 16px 0;
-  font-size: 16px;
-  color: #2c3e50;
-}
-
-.examples-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.btn-example {
-  padding: 12px;
-  border: 2px solid #ddd;
-  border-radius: 6px;
-  background: white;
-  color: #2c3e50;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-example:hover {
-  border-color: #42b883;
-  background: #f0fdf7;
-  transform: translateY(-2px);
-}
-
 .preview-wrapper {
   flex: 1;
   overflow-y: auto;
@@ -568,24 +417,11 @@ loadExample(0)
   .builder-content {
     grid-template-columns: 1fr;
   }
-
-  .examples-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
 }
 
 @media (max-width: 768px) {
   .builder-header h1 {
     font-size: 28px;
   }
-
-  .examples-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .panel-actions {
-    flex-direction: column;
-  }
 }
 </style>
-
