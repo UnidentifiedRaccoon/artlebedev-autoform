@@ -6,6 +6,7 @@ import { reactive, computed } from 'vue'
 export function useFormData(schema) {
   const formData = reactive({})
   const errors = reactive({})
+  const touched = reactive({})
 
   /**
    * Get field key (supports both 'model' and 'name')
@@ -24,6 +25,7 @@ export function useFormData(schema) {
     // Clear existing data
     Object.keys(formData).forEach(key => delete formData[key])
     Object.keys(errors).forEach(key => delete errors[key])
+    Object.keys(touched).forEach(key => delete touched[key])
     
     // Initialize with default values
     if (newSchema && newSchema.fields) {
@@ -34,6 +36,7 @@ export function useFormData(schema) {
         } else {
           formData[key] = field.defaultValue ?? ''
         }
+        touched[key] = false
       })
     }
   }
@@ -75,6 +78,23 @@ export function useFormData(schema) {
   }
 
   /**
+   * Mark field as touched
+   * @param {string} key - Field key
+   */
+  const markAsTouched = (key) => {
+    touched[key] = true
+  }
+
+  /**
+   * Check if field is touched
+   * @param {string} key - Field key
+   * @returns {boolean}
+   */
+  const isTouched = (key) => {
+    return touched[key] === true
+  }
+
+  /**
    * Get form data as plain object
    * @returns {Object} - Form data
    */
@@ -82,16 +102,35 @@ export function useFormData(schema) {
     return { ...formData }
   }
 
+  /**
+   * Get detailed form state
+   * @returns {Object} - Detailed state with data, errors, and metadata
+   */
+  const getDetailedFormState = () => {
+    return {
+      data: { ...formData },
+      errors: { ...errors },
+      validation: {
+        errorCount: Object.keys(errors).length,
+        touchedCount: Object.keys(touched).filter(k => touched[k]).length
+      }
+    }
+  }
+
   return {
     formData,
     errors,
+    touched,
     getFieldKey,
     initializeForm,
     resetForm,
     updateFieldValue,
     setFieldError,
     clearErrors,
-    getFormData
+    markAsTouched,
+    isTouched,
+    getFormData,
+    getDetailedFormState
   }
 }
 

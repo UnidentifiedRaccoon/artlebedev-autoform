@@ -20,7 +20,7 @@
           @validate="() => handleFieldValidation(field)"
         />
 
-        <div v-if="errors[getFieldKey(field)]" class="error-message">
+        <div v-if="shouldShowError(getFieldKey(field), errors, touched)" class="error-message">
           {{ errors[getFieldKey(field)] }}
         </div>
       </div>
@@ -36,8 +36,32 @@
     </form>
 
     <div class="form-data-preview">
-      <h3>Текущие значения формы:</h3>
-      <pre>{{ JSON.stringify(formData, null, 2) }}</pre>
+      <h3>Информация о форме:</h3>
+      
+      <div class="info-section">
+        <h4>Данные:</h4>
+        <pre>{{ JSON.stringify(detailedFormState.data, null, 2) }}</pre>
+      </div>
+
+      <div v-if="Object.keys(detailedFormState.errors).length > 0" class="info-section errors-section">
+        <h4>Ошибки валидации:</h4>
+        <div v-for="(error, key) in detailedFormState.errors" :key="key" class="error-item">
+          <strong>{{ key }}:</strong> {{ error }}
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h4>Статус:</h4>
+        <div class="stat-item">
+          <span class="stat-label">Затронуто полей:</span>
+          <span class="stat-value">{{ detailedFormState.validation.touchedCount }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Ошибок валидации:</span>
+          <span class="stat-value">{{ detailedFormState.validation.errorCount }}</span>
+        </div>
+      </div>
+
       <div class="validation-status" :class="{ valid: isFormValidComputed, invalid: !isFormValidComputed }">
         <CheckCircle v-if="isFormValidComputed" :size="16" class="inline-icon" />
         <XCircle v-else :size="16" class="inline-icon" />
@@ -67,8 +91,8 @@ const props = defineProps({
 })
 
 // Use composables
-const { formData, errors, getFieldKey, initializeForm, resetForm, setFieldError } = useFormData(props.schema)
-const { validateField, isFormValid } = useFormValidation()
+const { formData, errors, touched, getFieldKey, initializeForm, resetForm, setFieldError, markAsTouched, getDetailedFormState } = useFormData(props.schema)
+const { validateField, isFormValid, shouldShowError } = useFormValidation()
 
 // Map field types to components
 const fieldComponents = {
@@ -97,13 +121,21 @@ const handleFieldValidation = (field) => {
   const value = formData[key]
   const error = validateField(field, value)
   setFieldError(key, error)
+  markAsTouched(key)
 }
 
 /**
  * Check if form is valid
  */
 const isFormValidComputed = computed(() => {
-  return isFormValid(props.schema, formData, errors)
+  return isFormValid(props.schema, formData, errors, touched)
+})
+
+/**
+ * Get detailed form state for display
+ */
+const detailedFormState = computed(() => {
+  return getDetailedFormState()
 })
 
 /**
@@ -221,19 +253,75 @@ watch(() => props.schema, () => {
 }
 
 .form-data-preview h3 {
-  margin: 0 0 12px 0;
-  font-size: 16px;
+  margin: 0 0 20px 0;
+  font-size: 18px;
   color: #2c3e50;
+  font-weight: 700;
 }
 
-.form-data-preview pre {
+.info-section {
+  margin-bottom: 20px;
+}
+
+.info-section h4 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.info-section pre {
   background: #fff;
-  padding: 16px;
+  padding: 12px;
   border-radius: 6px;
   overflow-x: auto;
-  font-size: 13px;
-  margin: 0 0 12px 0;
+  font-size: 12px;
+  margin: 0;
   border: 1px solid #ddd;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.errors-section {
+  background: #fff5f5;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #e74c3c;
+}
+
+.error-item {
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #c0392b;
+}
+
+.error-item:last-child {
+  margin-bottom: 0;
+}
+
+.error-item strong {
+  color: #e74c3c;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 14px;
+}
+
+.stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  color: #6c757d;
+}
+
+.stat-value {
+  font-weight: 600;
+  color: #2c3e50;
 }
 
 .validation-status {

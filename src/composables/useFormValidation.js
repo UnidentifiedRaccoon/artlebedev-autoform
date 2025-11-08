@@ -81,19 +81,31 @@ export function useFormValidation() {
    * @param {Object} schema - Form schema
    * @param {Object} formData - Current form data
    * @param {Object} errors - Current errors object
+   * @param {Object} touched - Touched fields object
    * @returns {boolean} - True if form is valid
    */
-  const isFormValid = (schema, formData, errors) => {
+  const isFormValid = (schema, formData, errors, touched = {}) => {
     if (!schema.fields) return false
     
-    // Check if there are any errors
-    if (Object.keys(errors).length > 0) {
+    // Get list of touched fields
+    const touchedFields = Object.keys(touched).filter(k => touched[k])
+    
+    // If no fields are touched, consider form as valid (pristine state)
+    if (touchedFields.length === 0) {
+      return true
+    }
+    
+    // Check if there are any errors in touched fields
+    const hasTouchedErrors = touchedFields.some(key => errors[key])
+    if (hasTouchedErrors) {
       return false
     }
     
-    // Check required fields
-    return schema.fields.every(field => {
-      const key = field.model || field.name
+    // Check required fields that are touched
+    return touchedFields.every(key => {
+      const field = schema.fields.find(f => (f.model || f.name) === key)
+      if (!field) return true
+      
       const value = formData[key]
       
       if (field.required && !value && value !== 0 && value !== false) {
@@ -104,10 +116,22 @@ export function useFormValidation() {
     })
   }
 
+  /**
+   * Check if error should be shown for a field
+   * @param {string} fieldKey - Field key
+   * @param {Object} errors - Current errors object
+   * @param {Object} touched - Touched fields object
+   * @returns {boolean} - True if error should be shown
+   */
+  const shouldShowError = (fieldKey, errors, touched) => {
+    return touched[fieldKey] === true && !!errors[fieldKey]
+  }
+
   return {
     validateField,
     validateForm,
-    isFormValid
+    isFormValid,
+    shouldShowError
   }
 }
 

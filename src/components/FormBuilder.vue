@@ -326,8 +326,12 @@ loadExample(0)
 <style scoped>
 .form-builder {
   min-height: 100vh;
+  height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .builder-header {
@@ -358,6 +362,8 @@ loadExample(0)
   gap: 20px;
   max-width: 1800px;
   margin: 0 auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .editor-panel,
@@ -368,6 +374,8 @@ loadExample(0)
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  height: 100%;
+  min-height: 0;
 }
 
 .panel-header {

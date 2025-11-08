@@ -3,20 +3,22 @@
     <div class="panel-header">
       <h2><FileEdit :size="20" class="inline-icon" /> Редактор схемы</h2>
       <div class="panel-actions">
-        <button 
-          @click="$emit('format')" 
-          class="btn-action" 
-          title="Форматировать"
-        >
-          <Sparkles :size="16" class="btn-icon" /> Форматировать
-        </button>
-        <button 
-          @click="$emit('clear')" 
-          class="btn-action btn-danger" 
-          title="Очистить"
-        >
-          <Trash2 :size="16" class="btn-icon" /> Очистить
-        </button>
+        <Tooltip text="Автоматически форматирует JSON с правильными отступами" position="bottom">
+          <button 
+            @click="$emit('format')" 
+            class="btn-action"
+          >
+            <Sparkles :size="16" class="btn-icon" /> Форматировать
+          </button>
+        </Tooltip>
+        <Tooltip text="Очищает содержимое редактора схемы" position="bottom">
+          <button 
+            @click="$emit('clear')" 
+            class="btn-action btn-danger"
+          >
+            <Trash2 :size="16" class="btn-icon" /> Очистить
+          </button>
+        </Tooltip>
       </div>
     </div>
 
@@ -43,6 +45,7 @@
 
 <script setup>
 import { FileEdit, Sparkles, Trash2, AlertCircle, CheckCircle2 } from 'lucide-vue-next'
+import Tooltip from '../ui/Tooltip.vue'
 
 const props = defineProps({
   modelValue: {
@@ -67,6 +70,7 @@ const handleInput = (event) => {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
 }
 
 .panel-header {
@@ -125,6 +129,8 @@ const handleInput = (event) => {
   display: flex;
   flex-direction: column;
   padding: 20px;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .schema-editor {
