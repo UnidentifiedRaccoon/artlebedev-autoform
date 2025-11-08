@@ -39,7 +39,9 @@
       <h3>Текущие значения формы:</h3>
       <pre>{{ JSON.stringify(formData, null, 2) }}</pre>
       <div class="validation-status" :class="{ valid: isFormValidComputed, invalid: !isFormValidComputed }">
-        {{ isFormValidComputed ? '✓ Форма валидна' : '✗ Форма содержит ошибки' }}
+        <CheckCircle v-if="isFormValidComputed" :size="16" class="inline-icon" />
+        <XCircle v-else :size="16" class="inline-icon" />
+        {{ isFormValidComputed ? 'Форма валидна' : 'Форма содержит ошибки' }}
       </div>
     </div>
   </div>
@@ -54,6 +56,7 @@ import TextareaField from './fields/TextareaField.vue'
 import SelectField from './fields/SelectField.vue'
 import CheckboxField from './fields/CheckboxField.vue'
 import RadioField from './fields/RadioField.vue'
+import { CheckCircle, XCircle } from 'lucide-vue-next'
 
 const props = defineProps({
   schema: {
@@ -238,6 +241,9 @@ watch(() => props.schema, () => {
   border-radius: 6px;
   font-size: 14px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .validation-status.valid {

@@ -1,7 +1,7 @@
 <template>
   <div class="form-builder">
     <div class="builder-header">
-      <h1>🎨 Конструктор форм Vue 3</h1>
+      <h1><Palette :size="32" class="header-icon" /> Конструктор форм Vue 3</h1>
       <p>Введите JSON-схему слева и увидите сгенерированную форму справа</p>
     </div>
 
@@ -23,7 +23,7 @@
       <!-- Right Panel: Form Preview -->
       <div class="preview-panel">
         <div class="panel-header">
-          <h2>👁️ Предварительный просмотр</h2>
+          <h2><Eye :size="20" class="inline-icon" /> Предварительный просмотр</h2>
         </div>
 
         <div class="preview-wrapper">
@@ -31,7 +31,7 @@
             <FormGenerator :schema="parsedSchema" />
           </div>
           <div v-else class="empty-state">
-            <div class="empty-icon">📋</div>
+            <div class="empty-icon"><ClipboardList :size="64" /></div>
             <h3>Форма не создана</h3>
             <p>Введите валидную JSON-схему слева или выберите пример</p>
           </div>
@@ -47,6 +47,7 @@ import { useSchemaParser } from '../composables/useSchemaParser'
 import FormGenerator from './FormGenerator.vue'
 import SchemaEditor from './builder/SchemaEditor.vue'
 import ExamplesPanel from './builder/ExamplesPanel.vue'
+import { Palette, Eye, ClipboardList } from 'lucide-vue-next'
 
 const { parseSchema, formatSchema: formatSchemaText } = useSchemaParser()
 
@@ -339,6 +340,10 @@ loadExample(0)
   margin: 0 0 10px 0;
   font-size: 36px;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
 }
 
 .builder-header p {
@@ -378,6 +383,9 @@ loadExample(0)
   margin: 0;
   font-size: 20px;
   color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .preview-wrapper {
@@ -397,9 +405,9 @@ loadExample(0)
 }
 
 .empty-icon {
-  font-size: 64px;
   margin-bottom: 20px;
   opacity: 0.5;
+  color: #6c757d;
 }
 
 .empty-state h3 {

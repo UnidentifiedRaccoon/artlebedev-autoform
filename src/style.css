@@ -45,3 +45,17 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+/* Icon styles */
+.inline-icon {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.header-icon {
+  flex-shrink: 0;
+}
+
+.btn-icon {
+  flex-shrink: 0;
+}

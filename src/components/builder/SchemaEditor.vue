@@ -1,21 +1,21 @@
 <template>
   <div class="schema-editor-container">
     <div class="panel-header">
-      <h2>📝 Редактор схемы</h2>
+      <h2><FileEdit :size="20" class="inline-icon" /> Редактор схемы</h2>
       <div class="panel-actions">
         <button 
           @click="$emit('format')" 
           class="btn-action" 
           title="Форматировать"
         >
-          ✨ Форматировать
+          <Sparkles :size="16" class="btn-icon" /> Форматировать
         </button>
         <button 
           @click="$emit('clear')" 
           class="btn-action btn-danger" 
           title="Очистить"
         >
-          🗑️ Очистить
+          <Trash2 :size="16" class="btn-icon" /> Очистить
         </button>
       </div>
     </div>
@@ -31,17 +31,19 @@
       ></textarea>
       
       <div v-if="error" class="json-error">
-        <strong>❌ Ошибка парсинга JSON:</strong>
+        <strong><AlertCircle :size="16" class="inline-icon" /> Ошибка парсинга JSON:</strong>
         <pre>{{ error }}</pre>
       </div>
       <div v-else class="json-success">
-        ✅ JSON валиден
+        <CheckCircle2 :size="16" class="inline-icon" /> JSON валиден
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { FileEdit, Sparkles, Trash2, AlertCircle, CheckCircle2 } from 'lucide-vue-next'
+
 const props = defineProps({
   modelValue: {
     type: String,
@@ -80,6 +82,9 @@ const handleInput = (event) => {
   margin: 0;
   font-size: 20px;
   color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .panel-actions {
@@ -97,6 +102,9 @@ const handleInput = (event) => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .btn-action:hover {
@@ -172,6 +180,9 @@ const handleInput = (event) => {
   color: #155724;
   font-size: 13px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 </style>
 

@@ -1,6 +1,6 @@
 <template>
   <div class="examples-section">
-    <h3>📚 Примеры схем:</h3>
+    <h3><BookOpen :size="18" class="inline-icon" /> Примеры схем:</h3>
     <div class="examples-grid">
       <button
         v-for="(example, index) in examples"
@@ -15,6 +15,8 @@
 </template>
 
 <script setup>
+import { BookOpen } from 'lucide-vue-next'
+
 defineProps({
   examples: {
     type: Array,
@@ -37,6 +39,9 @@ defineEmits(['load-example'])
   margin: 0 0 16px 0;
   font-size: 16px;
   color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .examples-grid {
