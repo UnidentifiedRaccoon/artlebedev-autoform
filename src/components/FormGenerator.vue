@@ -82,19 +82,6 @@ import CheckboxField from './fields/CheckboxField.vue'
 import RadioField from './fields/RadioField.vue'
 import { CheckCircle, XCircle } from 'lucide-vue-next'
 
-const props = defineProps({
-  schema: {
-    type: Object,
-    required: true,
-    default: () => ({ fields: [] })
-  }
-})
-
-// Use composables
-const { formData, errors, touched, getFieldKey, initializeForm, resetForm, setFieldError, markAsTouched, getDetailedFormState } = useFormData(props.schema)
-const { validateField, isFormValid, shouldShowError } = useFormValidation()
-
-// Map field types to components
 const fieldComponents = {
   text: InputField,
   email: InputField,
@@ -106,16 +93,21 @@ const fieldComponents = {
   radio: RadioField
 }
 
-/**
- * Get component for field type
- */
+const props = defineProps({
+  schema: {
+    type: Object,
+    required: true,
+    default: () => ({ fields: [] })
+  }
+})
+
+const { formData, errors, touched, getFieldKey, initializeForm, resetForm, setFieldError, markAsTouched, getDetailedFormState } = useFormData(props.schema)
+const { validateField, isFormValid, shouldShowError } = useFormValidation()
+
 const getFieldComponent = (type) => {
   return fieldComponents[type] || InputField
 }
 
-/**
- * Handle field validation
- */
 const handleFieldValidation = (field) => {
   const key = getFieldKey(field)
   const value = formData[key]
@@ -124,29 +116,19 @@ const handleFieldValidation = (field) => {
   markAsTouched(key)
 }
 
-/**
- * Check if form is valid
- */
 const isFormValidComputed = computed(() => {
   return isFormValid(props.schema, formData, errors, touched)
 })
 
-/**
- * Get detailed form state for display
- */
 const detailedFormState = computed(() => {
   return getDetailedFormState()
 })
 
-/**
- * Handle form submission
- */
 const handleSubmit = () => {
   console.log('Form submitted:', formData)
   alert('Форма успешно отправлена! Данные в консоли.')
 }
 
-// Watch for schema changes and reinitialize
 watch(() => props.schema, () => {
   initializeForm(props.schema)
 }, { immediate: true, deep: true })

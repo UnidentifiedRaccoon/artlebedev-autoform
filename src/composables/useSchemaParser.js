@@ -1,17 +1,9 @@
 import { ref, computed } from 'vue'
 
-/**
- * Composable for parsing and validating JSON schemas
- */
-export function useSchemaParser() {
+export const useSchemaParser = () => {
   const schemaText = ref('')
   const jsonError = ref('')
 
-  /**
-   * Parse JSON schema from text
-   * @param {string} text - JSON text
-   * @returns {Object|null} - Parsed schema or null if error
-   */
   const parseSchema = (text) => {
     if (!text || !text.trim()) {
       jsonError.value = ''
@@ -21,7 +13,6 @@ export function useSchemaParser() {
     try {
       const parsed = JSON.parse(text)
       
-      // Validate schema structure
       const validationError = validateSchemaStructure(parsed)
       if (validationError) {
         jsonError.value = validationError
@@ -36,11 +27,6 @@ export function useSchemaParser() {
     }
   }
 
-  /**
-   * Format JSON schema text
-   * @param {string} text - JSON text
-   * @returns {string} - Formatted JSON or original text if error
-   */
   const formatSchema = (text) => {
     if (!text || !text.trim()) {
       return text
@@ -50,16 +36,10 @@ export function useSchemaParser() {
       const parsed = JSON.parse(text)
       return JSON.stringify(parsed, null, 2)
     } catch (error) {
-      // Return original text if formatting fails
       return text
     }
   }
 
-  /**
-   * Validate schema structure
-   * @param {Object} schema - Parsed schema object
-   * @returns {string|null} - Error message or null if valid
-   */
   const validateSchemaStructure = (schema) => {
     if (!schema || typeof schema !== 'object') {
       return 'Схема должна быть объектом'
@@ -73,7 +53,6 @@ export function useSchemaParser() {
       return 'Поле "fields" должно быть массивом'
     }
 
-    // Validate each field
     for (let i = 0; i < schema.fields.length; i++) {
       const field = schema.fields[i]
       
@@ -89,13 +68,11 @@ export function useSchemaParser() {
         return `Поле #${i + 1}: отсутствует обязательное свойство "model" или "name"`
       }
 
-      // Validate field type
       const validTypes = ['text', 'email', 'password', 'number', 'textarea', 'select', 'checkbox', 'radio']
       if (!validTypes.includes(field.type)) {
         return `Поле #${i + 1}: неподдерживаемый тип "${field.type}"`
       }
 
-      // Validate options for select and radio
       if ((field.type === 'select' || field.type === 'radio') && !field.options) {
         return `Поле #${i + 1}: для типа "${field.type}" требуется свойство "options"`
       }
@@ -108,25 +85,15 @@ export function useSchemaParser() {
     return null
   }
 
-  /**
-   * Update schema text
-   * @param {string} text - New schema text
-   */
   const updateSchemaText = (text) => {
     schemaText.value = text
   }
 
-  /**
-   * Clear schema
-   */
   const clearSchema = () => {
     schemaText.value = ''
     jsonError.value = ''
   }
 
-  /**
-   * Check if schema is valid
-   */
   const isSchemaValid = computed(() => {
     return !jsonError.value && schemaText.value.trim() !== ''
   })
