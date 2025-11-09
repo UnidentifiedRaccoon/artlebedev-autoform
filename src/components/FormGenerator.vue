@@ -61,12 +61,6 @@
           <span class="stat-value">{{ detailedFormState.validation.errorCount }}</span>
         </div>
       </div>
-
-      <div class="validation-status" :class="{ valid: isFormValidComputed, invalid: !isFormValidComputed }">
-        <CheckCircle v-if="isFormValidComputed" :size="16" class="inline-icon" />
-        <XCircle v-else :size="16" class="inline-icon" />
-        {{ isFormValidComputed ? 'Форма валидна' : 'Форма содержит ошибки' }}
-      </div>
     </div>
   </div>
 </template>
@@ -80,7 +74,6 @@ import TextareaField from './fields/TextareaField.vue'
 import SelectField from './fields/SelectField.vue'
 import CheckboxField from './fields/CheckboxField.vue'
 import RadioField from './fields/RadioField.vue'
-import { CheckCircle, XCircle } from 'lucide-vue-next'
 import type { FormSchema, FormField, FieldType } from '../types'
 import type { Component } from 'vue'
 
@@ -127,6 +120,25 @@ const detailedFormState = computed(() => {
 })
 
 const handleSubmit = (): void => {
+  let hasErrors = false
+  
+  props.schema.fields?.forEach(field => {
+    const key = getFieldKey(field)
+    const value = formData[key]
+    const error = validateField(field, value)
+    
+    if (error) {
+      setFieldError(key, error)
+      hasErrors = true
+    }
+    markAsTouched(key)
+  })
+  
+  if (hasErrors || !isFormValidComputed.value) {
+    alert('Пожалуйста, исправьте ошибки в форме перед отправкой')
+    return
+  }
+  
   console.log('Form submitted:', formData)
   alert('Форма успешно отправлена! Данные в консоли.')
 }
@@ -306,25 +318,5 @@ watch(() => props.schema, () => {
 .stat-value {
   font-weight: 600;
   color: #2c3e50;
-}
-
-.validation-status {
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.validation-status.valid {
-  background: #d4edda;
-  color: #155724;
-}
-
-.validation-status.invalid {
-  background: #f8d7da;
-  color: #721c24;
 }
 </style>

@@ -36,29 +36,27 @@ export const useFormValidation = () => {
   ): boolean => {
     if (!schema.fields) return false
     
-    const touchedFields = Object.keys(touched).filter(k => touched[k])
-    
-    if (touchedFields.length === 0) {
+    const hasAllRequiredFields = schema.fields.every(field => {
+      const key = field.model || field.name
+      if (!key) return true
+      
+      if (field.required) {
+        const value = formData[key]
+        if (!value && value !== 0 && value !== false) {
+          return false
+        }
+      }
       return true
-    }
+    })
     
-    const hasTouchedErrors = touchedFields.some(key => errors[key])
-    if (hasTouchedErrors) {
+    if (!hasAllRequiredFields) {
       return false
     }
     
-    return touchedFields.every(key => {
-      const field = schema.fields.find(f => (f.model || f.name) === key)
-      if (!field) return true
-      
-      const value = formData[key]
-      
-      if (field.required && !value && value !== 0 && value !== false) {
-        return false
-      }
-      
-      return true
-    })
+    const touchedFields = Object.keys(touched).filter(k => touched[k])
+    const hasTouchedErrors = touchedFields.some(key => errors[key])
+    
+    return !hasTouchedErrors
   }
 
   const shouldShowError = (fieldKey: string, errors: FormErrors, touched: TouchedFields): boolean => {
