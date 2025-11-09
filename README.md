@@ -57,7 +57,7 @@ npm install
 npm run dev
 ```
 
-Приложение будет доступно по адресу [http://localhost:5173](http://localhost:5173)
+Приложение будет доступно по адресу [ http://localhost:5173/artlebedev-autoform/]( http://localhost:5173/artlebedev-autoform/)
 
 ### Сборка для продакшена
 ```bash

@@ -1,24 +1,29 @@
 import { reactive } from 'vue'
+import type { FormSchema, FormField, FormData, FormErrors, TouchedFields, DetailedFormState } from '../types'
 
-export const useFormData = (schema) => {
-  const formData = reactive({})
-  const errors = reactive({})
-  const touched = reactive({})
+export const useFormData = (schema: FormSchema) => {
+  const formData = reactive<FormData>({})
+  const errors = reactive<FormErrors>({})
+  const touched = reactive<TouchedFields>({})
 
-  const getFieldKey = (field) => {
-    return field.model || field.name
+  const getFieldKey = (field: FormField): string => {
+    return field.model || field.name || ''
   }
 
-  const initializeForm = (newSchema) => {
+  const initializeForm = (newSchema: FormSchema): void => {
     Object.keys(formData).forEach(key => delete formData[key])
     Object.keys(errors).forEach(key => delete errors[key])
     Object.keys(touched).forEach(key => delete touched[key])
-    
+
     if (newSchema && newSchema.fields) {
       newSchema.fields.forEach(field => {
         const key = getFieldKey(field)
+        if (!key) return
+        
         if (field.type === 'checkbox') {
           formData[key] = field.defaultValue ?? false
+        } else if (field.type === 'number') {
+          formData[key] = field.defaultValue ?? ''
         } else {
           formData[key] = field.defaultValue ?? ''
         }
@@ -27,15 +32,15 @@ export const useFormData = (schema) => {
     }
   }
 
-  const resetForm = () => {
-    initializeForm(schema.value || schema)
+  const resetForm = (): void => {
+    initializeForm(schema)
   }
 
-  const updateFieldValue = (key, value) => {
+  const updateFieldValue = (key: string, value: string | number | boolean): void => {
     formData[key] = value
   }
 
-  const setFieldError = (key, error) => {
+  const setFieldError = (key: string, error: string | null): void => {
     if (error) {
       errors[key] = error
     } else {
@@ -43,23 +48,23 @@ export const useFormData = (schema) => {
     }
   }
 
-  const clearErrors = () => {
+  const clearErrors = (): void => {
     Object.keys(errors).forEach(key => delete errors[key])
   }
 
-  const markAsTouched = (key) => {
+  const markAsTouched = (key: string): void => {
     touched[key] = true
   }
 
-  const isTouched = (key) => {
+  const isTouched = (key: string): boolean => {
     return touched[key] === true
   }
 
-  const getFormData = () => {
+  const getFormData = (): FormData => {
     return { ...formData }
   }
 
-  const getDetailedFormState = () => {
+  const getDetailedFormState = (): DetailedFormState => {
     return {
       data: { ...formData },
       errors: { ...errors },
@@ -86,3 +91,4 @@ export const useFormData = (schema) => {
     getDetailedFormState
   }
 }
+

@@ -14,18 +14,24 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { BookOpen } from 'lucide-vue-next'
+import type { FormSchema } from '../../types'
 
-defineProps({
-  examples: {
-    type: Array,
-    required: true,
-    default: () => []
-  }
-})
+interface Example {
+  name: string
+  schema: FormSchema
+}
 
-defineEmits(['load-example'])
+interface Props {
+  examples: Example[]
+}
+
+defineProps<Props>()
+
+defineEmits<{
+  'load-example': [index: number]
+}>()
 </script>
 
 <style scoped>

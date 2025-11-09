@@ -71,7 +71,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, watch } from 'vue'
 import { useFormData } from '../composables/useFormData'
 import { useFormValidation } from '../composables/useFormValidation'
@@ -81,8 +81,10 @@ import SelectField from './fields/SelectField.vue'
 import CheckboxField from './fields/CheckboxField.vue'
 import RadioField from './fields/RadioField.vue'
 import { CheckCircle, XCircle } from 'lucide-vue-next'
+import type { FormSchema, FormField, FieldType } from '../types'
+import type { Component } from 'vue'
 
-const fieldComponents = {
+const fieldComponents: Record<FieldType, Component> = {
   text: InputField,
   email: InputField,
   password: InputField,
@@ -93,22 +95,22 @@ const fieldComponents = {
   radio: RadioField
 }
 
-const props = defineProps({
-  schema: {
-    type: Object,
-    required: true,
-    default: () => ({ fields: [] })
-  }
+interface Props {
+  schema: FormSchema
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  schema: () => ({ fields: [] })
 })
 
 const { formData, errors, touched, getFieldKey, initializeForm, resetForm, setFieldError, markAsTouched, getDetailedFormState } = useFormData(props.schema)
 const { validateField, isFormValid, shouldShowError } = useFormValidation()
 
-const getFieldComponent = (type) => {
+const getFieldComponent = (type: FieldType): Component => {
   return fieldComponents[type] || InputField
 }
 
-const handleFieldValidation = (field) => {
+const handleFieldValidation = (field: FormField): void => {
   const key = getFieldKey(field)
   const value = formData[key]
   const error = validateField(field, value)
@@ -124,7 +126,7 @@ const detailedFormState = computed(() => {
   return getDetailedFormState()
 })
 
-const handleSubmit = () => {
+const handleSubmit = (): void => {
   console.log('Form submitted:', formData)
   alert('Форма успешно отправлена! Данные в консоли.')
 }

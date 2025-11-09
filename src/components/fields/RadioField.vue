@@ -26,30 +26,31 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
+import type { FormField } from '../../types'
 
-const props = defineProps({
-  field: {
-    type: Object,
-    required: true
-  },
-  modelValue: {
-    type: String,
-    default: ''
-  },
-  error: {
-    type: String,
-    default: ''
-  }
+interface Props {
+  field: FormField
+  modelValue: string
+  error?: string
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: '',
+  error: ''
 })
 
-const emit = defineEmits(['update:modelValue', 'validate'])
+const emit = defineEmits<{
+  'update:modelValue': [value: string]
+  'validate': []
+}>()
 
 const fieldId = computed(() => props.field.model || props.field.name)
 
-const handleChange = (event) => {
-  emit('update:modelValue', event.target.value)
+const handleChange = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  emit('update:modelValue', target.value)
   emit('validate')
 }
 </script>

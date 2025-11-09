@@ -18,30 +18,36 @@
   />
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
+import type { FormField } from '../../types'
 
-const props = defineProps({
-  field: {
-    type: Object,
-    required: true
-  },
-  modelValue: {
-    type: [String, Number],
-    default: ''
-  },
-  error: {
-    type: String,
-    default: ''
-  }
+interface Props {
+  field: FormField
+  modelValue: string | number
+  error?: string
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: '',
+  error: ''
 })
 
-const emit = defineEmits(['update:modelValue', 'validate'])
+const emit = defineEmits<{
+  'update:modelValue': [value: string | number]
+  'validate': []
+}>()
 
 const fieldId = computed(() => props.field.model || props.field.name)
 
-const handleInput = (event) => {
-  const value = props.field.type === 'number' ? event.target.value : event.target.value
+const handleInput = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  let value: string | number = target.value
+  
+  if (props.field.type === 'number') {
+    value = target.value === '' ? '' : Number(target.value)
+  }
+  
   emit('update:modelValue', value)
   emit('validate')
 }

@@ -41,32 +41,37 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
 import { useSchemaParser } from '../composables/useSchemaParser'
 import FormGenerator from './FormGenerator.vue'
 import SchemaEditor from './builder/SchemaEditor.vue'
 import ExamplesPanel from './builder/ExamplesPanel.vue'
 import { Palette, Eye, ClipboardList } from 'lucide-vue-next'
+import type { FormSchema, FieldType } from '../types'
 
 const { parseSchema, formatSchema: formatSchemaText } = useSchemaParser()
 
 const schemaText = ref('')
 const jsonError = ref('')
-const parsedSchema = reactive({
+const parsedSchema = reactive<FormSchema>({
   title: '',
   description: '',
   fields: []
 })
 
-// Example schemas
-const examples = [
+interface Example {
+  name: string
+  schema: FormSchema
+}
+
+const examples: Example[] = [
   {
     name: 'artlebedev',
     schema: {
       fields: [
         { 
-          type: 'text', 
+          type: 'text' as FieldType, 
           label: 'Имя', 
           model: 'name', 
           required: true 
@@ -256,34 +261,26 @@ const examples = [
   }
 ]
 
-/**
- * Handle schema text changes
- */
 const handleSchemaChange = () => {
-  const parsed = parseSchema(schemaText.value)
+  const result = parseSchema(schemaText.value)
   
-  if (parsed) {
+  if (result.schema) {
     Object.assign(parsedSchema, {
-      title: parsed.title || '',
-      description: parsed.description || '',
-      fields: parsed.fields || []
+      title: result.schema.title || '',
+      description: result.schema.description || '',
+      fields: result.schema.fields || []
     })
     jsonError.value = ''
   } else if (!schemaText.value.trim()) {
-    // Clear schema if text is empty
     parsedSchema.title = ''
     parsedSchema.description = ''
     parsedSchema.fields = []
     jsonError.value = ''
   } else {
-    // There was a parse error
-    jsonError.value = 'Ошибка парсинга JSON'
+    jsonError.value = result.error
   }
 }
 
-/**
- * Format JSON schema
- */
 const formatJSON = () => {
   if (!schemaText.value.trim()) return
   
@@ -294,9 +291,6 @@ const formatJSON = () => {
   }
 }
 
-/**
- * Clear schema
- */
 const clearSchema = () => {
   schemaText.value = ''
   jsonError.value = ''
@@ -305,10 +299,7 @@ const clearSchema = () => {
   parsedSchema.fields = []
 }
 
-/**
- * Load example schema
- */
-const loadExample = (index) => {
+const loadExample = (index: number) => {
   const example = examples[index]
   schemaText.value = JSON.stringify(example.schema, null, 2)
   handleSchemaChange()

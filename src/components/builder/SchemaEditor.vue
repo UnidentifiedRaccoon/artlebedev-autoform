@@ -43,25 +43,29 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { FileEdit, Sparkles, Trash2, AlertCircle, CheckCircle2 } from 'lucide-vue-next'
 import Tooltip from '../ui/Tooltip.vue'
 
-const props = defineProps({
-  modelValue: {
-    type: String,
-    default: ''
-  },
-  error: {
-    type: String,
-    default: ''
-  }
+interface Props {
+  modelValue: string
+  error?: string
+}
+
+withDefaults(defineProps<Props>(), {
+  modelValue: '',
+  error: ''
 })
 
-const emit = defineEmits(['update:modelValue', 'format', 'clear'])
+const emit = defineEmits<{
+  'update:modelValue': [value: string]
+  'format': []
+  'clear': []
+}>()
 
-const handleInput = (event) => {
-  emit('update:modelValue', event.target.value)
+const handleInput = (event: Event): void => {
+  const target = event.target as HTMLTextAreaElement
+  emit('update:modelValue', target.value)
 }
 </script>
 

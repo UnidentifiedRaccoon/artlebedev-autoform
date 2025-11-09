@@ -22,26 +22,25 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue'
 
-const props = defineProps({
-  text: {
-    type: String,
-    required: true
-  },
-  position: {
-    type: String,
-    default: 'top',
-    validator: (value) => ['top', 'bottom', 'left', 'right'].includes(value)
-  }
+type Position = 'top' | 'bottom' | 'left' | 'right'
+
+interface Props {
+  text: string
+  position?: Position
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  position: 'top'
 })
 
 const showTooltip = ref(false)
-const wrapperRef = ref(null)
+const wrapperRef = ref<HTMLElement | null>(null)
 const tooltipPosition = ref({ top: 0, left: 0 })
 
-const handleMouseEnter = () => {
+const handleMouseEnter = (): void => {
   if (wrapperRef.value) {
     const rect = wrapperRef.value.getBoundingClientRect()
     const offset = 8
@@ -77,13 +76,13 @@ const handleMouseEnter = () => {
 }
 
 const tooltipStyle = computed(() => {
-  const style = {
+  const style: Record<string, string | number> = {
     position: 'fixed',
     top: `${tooltipPosition.value.top}px`,
     left: `${tooltipPosition.value.left}px`,
     zIndex: 9999
   }
-  
+
   if (props.position === 'top') {
     style.transform = 'translate(-50%, -100%)'
   } else if (props.position === 'bottom') {
@@ -93,7 +92,7 @@ const tooltipStyle = computed(() => {
   } else if (props.position === 'right') {
     style.transform = 'translateY(-50%)'
   }
-  
+
   return style
 })
 </script>
